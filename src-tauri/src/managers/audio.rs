@@ -507,6 +507,29 @@ impl AudioRecordingManager {
                     return Ok(());
                 }
             }
+
+            // The stream can die out from under us (device unplugged, Bluetooth
+            // profile switch, another app taking the mic) — in always-on mode
+            // `is_open` stays true and nothing ever reopens it. Rebuild the
+            // stream once and retry before giving up.
+            warn!("Recorder unavailable; rebuilding microphone stream and retrying once");
+            self.invalidate_device_cache();
+            self.stop_microphone_stream();
+            if let Err(e) = self.start_microphone_stream() {
+                let msg = format!("{e}");
+                error!("Microphone stream rebuild failed: {msg}");
+                return Err(msg);
+            }
+            if let Some(rec) = self.recorder.lock().unwrap().as_ref() {
+                if rec.start(vad_policy).is_ok() {
+                    *self.is_recording.lock().unwrap() = true;
+                    *state = RecordingState::Recording {
+                        binding_id: binding_id.to_string(),
+                    };
+                    info!("Recording started after stream rebuild for binding {binding_id}");
+                    return Ok(());
+                }
+            }
             Err("Recorder not available".to_string())
         } else {
             Err("Already recording".to_string())

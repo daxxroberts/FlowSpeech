@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Handy",
+  "productName": "FlowSpeech",
   "version": "0.9.0",
   "identifier": "com.pais.handy",
   "build": {
@@ -25,9 +25,13 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "targets": "all",
-    "resources": ["resources/**/*"],
+    "resources": {
+      "resources": "resources",
+      "C:/FlowSpeech/llm/models/cleanup-shards/qwen3-4b-cleanup-00001-of-00002.gguf": "resources/models/cleanup/qwen3-4b-cleanup-00001-of-00002.gguf",
+      "C:/FlowSpeech/llm/models/cleanup-shards/qwen3-4b-cleanup-00002-of-00002.gguf": "resources/models/cleanup/qwen3-4b-cleanup-00002-of-00002.gguf"
+    },
     "license": "MIT",
     "icon": [
       "icons/32x32.png",
@@ -66,18 +70,10 @@
       }
     },
     "windows": {
-      "signCommand": "trusted-signing-cli -e https://eus.codesigning.azure.net/ -a CJ-Signing -c cjpais-dev -d Handy %1",
       "nsis": {
         "template": "nsis/installer.nsi"
       }
     }
   },
-  "plugins": {
-    "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJBQjcyMDk1MjA2NjAxRjkKUldUNUFXWWdsU0MzdXRRZi8zYzhqV2FaNUVDbDd2Rk5VM1IvWWowVXdmRFNKQ1BrMXF5RFFsLy8K",
-      "endpoints": [
-        "https://github.com/cjpais/Handy/releases/latest/download/latest.json"
-      ]
-    }
-  }
+  "plugins": {}
 }

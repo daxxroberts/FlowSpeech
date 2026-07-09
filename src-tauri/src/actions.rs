@@ -130,6 +130,46 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
         return None;
     }
 
+    // FlowSpeech embedded provider: run the cleanup model fully in-process (no
+    // helper server, no network). Any failure returns None so the caller keeps the
+    // raw transcript — dictation never hard-fails on cleanup.
+    if provider.id == "embedded" {
+        if !crate::managers::cleanup::is_available() {
+            debug!("Embedded cleanup selected but model file is not available; keeping raw transcript");
+            return None;
+        }
+        let system_prompt = build_system_prompt(&prompt);
+        let user_content = transcription.to_string();
+        return match tauri::async_runtime::spawn_blocking(move || {
+            crate::managers::cleanup::run(&system_prompt, &user_content)
+        })
+        .await
+        {
+            Ok(Ok(result)) => {
+                let result = strip_invisible_chars(&result);
+                if result.trim().is_empty() {
+                    debug!("Embedded cleanup returned empty output; keeping raw transcript");
+                    None
+                } else {
+                    debug!(
+                        "Embedded cleanup succeeded. Output length: {} chars. Output: '{}'",
+                        result.len(),
+                        result
+                    );
+                    Some(result)
+                }
+            }
+            Ok(Err(e)) => {
+                error!("Embedded cleanup failed: {e}. Keeping raw transcript.");
+                None
+            }
+            Err(e) => {
+                error!("Embedded cleanup task panicked: {e}. Keeping raw transcript.");
+                None
+            }
+        };
+    }
+
     debug!(
         "Starting LLM post-processing with provider '{}' (model: {})",
         provider.id, model
@@ -187,8 +227,9 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
                         } else {
                             let result = strip_invisible_chars(&result);
                             debug!(
-                                "Apple Intelligence post-processing succeeded. Output length: {} chars",
-                                result.len()
+                                "Apple Intelligence post-processing succeeded. Output length: {} chars. Output: '{}'",
+                                result.len(),
+                                result
                             );
                             Some(result)
                         }
@@ -241,9 +282,10 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
                         {
                             let result = strip_invisible_chars(transcription_value);
                             debug!(
-                                "Structured output post-processing succeeded for provider '{}'. Output length: {} chars",
+                                "Structured output post-processing succeeded for provider '{}'. Output length: {} chars. Output: '{}'",
                                 provider.id,
-                                result.len()
+                                result.len(),
+                                result
                             );
                             return Some(result);
                         } else {
@@ -291,9 +333,10 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
         Ok(Some(content)) => {
             let content = strip_invisible_chars(&content);
             debug!(
-                "LLM post-processing succeeded for provider '{}'. Output length: {} chars",
+                "LLM post-processing succeeded for provider '{}'. Output length: {} chars. Output: '{}'",
                 provider.id,
-                content.len()
+                content.len(),
+                content
             );
             Some(content)
         }

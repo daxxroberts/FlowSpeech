@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./RecordingOverlay.css";
+import fMark from "../assets/flowspeech-f-mark.png";
 import { commands, events } from "@/bindings";
 import type {
   StreamPhase,
@@ -185,7 +186,7 @@ const RecordingOverlay: React.FC = () => {
   const listeningRow = (showTimer: boolean, showCancel: boolean) => (
     <div className="sbase">
       <div className="sbase-l">
-        <span className="sdot" />
+        <img src={fMark} className="sflogo" alt="" />
       </div>
       {waveform}
       <div className="sbase-r">

@@ -181,6 +181,21 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
 
+    // FlowSpeech: point the embedded cleanup engine at its bundled GGUF. The model
+    // is not loaded here (that happens lazily on first cleanup); we only record the
+    // path. If the resource is missing, is_available() stays false and the
+    // `embedded` provider quietly keeps the raw transcript.
+    // The cleanup model ships as 2 GGUF shards (each < 2 GB — the Windows installer
+    // per-file limit). llama.cpp auto-loads all shards when pointed at the first one,
+    // as long as they sit in the same directory with the -0000N-of-000NN names.
+    match app_handle.path().resolve(
+        "resources/models/cleanup/qwen3-4b-cleanup-00001-of-00002.gguf",
+        tauri::path::BaseDirectory::Resource,
+    ) {
+        Ok(cleanup_model) => managers::cleanup::set_model_path(cleanup_model),
+        Err(e) => log::warn!("Could not resolve embedded cleanup model path: {e}"),
+    }
+
     // Note: Shortcuts are NOT initialized here.
     // The frontend is responsible for calling the `initialize_shortcuts` command
     // after permissions are confirmed (on macOS) or after onboarding completes.
@@ -738,7 +753,8 @@ pub fn run(cli_args: CliArgs) {
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        // FlowSpeech fork: updater plugin not registered — endpoints pointed at
+        // upstream Handy releases, which would overwrite this fork if installed.
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_macos_permissions::init())
@@ -799,7 +815,7 @@ pub fn run(cli_args: CliArgs) {
             // for portable mode (redirects WebView2 cache to portable Data dir)
             let mut win_builder =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
-                    .title("Handy")
+                    .title("FlowSpeech")
                     .inner_size(680.0, 570.0)
                     .min_inner_size(680.0, 570.0)
                     .resizable(true)

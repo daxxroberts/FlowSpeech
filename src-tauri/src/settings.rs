@@ -467,7 +467,9 @@ fn default_autostart_enabled() -> bool {
 }
 
 fn default_update_checks_enabled() -> bool {
-    true
+    // FlowSpeech fork: updates disabled — upstream's updater would replace
+    // this fork with stock Handy. Endpoints also removed from tauri.conf.json.
+    false
 }
 
 fn default_show_whats_new_on_update() -> bool {
@@ -522,7 +524,10 @@ fn default_auto_submit() -> bool {
 }
 
 fn default_history_limit() -> usize {
-    5
+    // FlowSpeech fork: locked decision — never persist audio recordings.
+    // 0 makes cleanup_old_entries() delete each WAV synchronously right after
+    // it's written (see managers/history.rs save_entry -> cleanup_by_count).
+    0
 }
 
 fn default_recording_retention_period() -> RecordingRetentionPeriod {
@@ -552,11 +557,22 @@ fn default_show_tray_icon() -> bool {
 }
 
 fn default_post_process_provider_id() -> String {
-    "openai".to_string()
+    // FlowSpeech default: the embedded in-process cleanup model (zero-cost, offline,
+    // no helper server). BYO-key HTTP providers remain available in the dropdown.
+    "embedded".to_string()
 }
 
 fn default_post_process_providers() -> Vec<PostProcessProvider> {
     let mut providers = vec![
+        // FlowSpeech embedded cleanup — handled in-process (actions.rs), not via HTTP.
+        PostProcessProvider {
+            id: "embedded".to_string(),
+            label: "Built-in (offline)".to_string(),
+            base_url: "embedded://local".to_string(),
+            allow_base_url_edit: false,
+            models_endpoint: None,
+            supports_structured_output: false,
+        },
         PostProcessProvider {
             id: "openai".to_string(),
             label: "OpenAI".to_string(),
@@ -657,6 +673,11 @@ fn default_post_process_api_keys() -> SecretMap {
 fn default_model_for_provider(provider_id: &str) -> String {
     if provider_id == APPLE_INTELLIGENCE_PROVIDER_ID {
         return APPLE_INTELLIGENCE_DEFAULT_MODEL_ID.to_string();
+    }
+    // Embedded provider ships one bundled model; a non-empty value is required or
+    // the empty-model guard in actions.rs would skip post-processing.
+    if provider_id == "embedded" {
+        return "qwen3-4b-cleanup".to_string();
     }
     String::new()
 }

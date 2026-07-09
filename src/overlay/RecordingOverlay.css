@@ -263,20 +263,22 @@
   gap: 10px;
   justify-self: end;
 }
-.sdot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--s-accent);
+.sflogo {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
   flex: none;
-  animation: sdot-pulse 1.9s infinite;
+  animation: sflogo-pulse 1.9s infinite;
 }
-@keyframes sdot-pulse {
-  0% {
-    box-shadow: 0 0 0 0 var(--s-accent-soft);
+@keyframes sflogo-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.92);
   }
-  70% {
-    box-shadow: 0 0 0 7px transparent;
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
   }
 }
 .stimer {

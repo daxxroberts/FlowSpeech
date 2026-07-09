@@ -74,6 +74,8 @@ sha2 = "0.10"
 # Canary, Cohere). Per-platform backend features are added in the target tables.
 transcribe-rs = { version = "0.3.8", features = ["onnx"] }
 transcribe-cpp = { version = "0.1.1", default-features = false }
+# SPIKE (embed plan): testing whether llama-cpp-2's ggml coexists with transcribe-cpp's.
+llama-cpp-2 = { version = "0.1", default-features = false }
 handy-keys = "0.2.4"
 ferrous-opencc = "0.2.3"
 clap = { version = "4", features = ["derive"] }
