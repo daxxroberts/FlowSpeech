@@ -6,7 +6,7 @@
 
 ## Download
 
-**➡️ [Download FlowSpeech (Google Drive)](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)** · ~3 GB zip · Windows 10/11 (64-bit)
+**➡️ [Download FlowSpeech (Google Drive)](https://drive.google.com/drive/folders/1OYH4Q_8863EOFFiXgYnHaCWcrdHO035r?usp=sharing)** · ~3 GB zip · Windows 10/11 (64-bit)
 
 Everything is included in the download — the speech models and the cleanup AI are already inside. Nothing else to install, nothing to download on first run.
 
